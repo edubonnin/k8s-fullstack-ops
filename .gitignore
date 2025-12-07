@@ -1,0 +1,70 @@
+# ----------------------------------------------------------------------
+# Seguridad y Secretos
+# ----------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Archivos de secretos en K8s
+secrets.yaml
+secrets.yml
+k8s-secrets.yaml
+kubeconfig
+.kube/
+
+# ----------------------------------------------------------------------
+# Minikube & Kubernetes Local
+# ----------------------------------------------------------------------
+# Directorios de configuración local de minikube si se generan en el proyecto
+.minikube/
+# Logs de crash de minikube
+minikube-logs/
+# Archivos temporales generados por kubectl
+kubectl-debug*
+
+# ----------------------------------------------------------------------
+# Helm (Gestor de paquetes de K8s)
+# ----------------------------------------------------------------------
+# Paquetes empaquetados (binarios)
+*.tgz
+*.lock
+# Directorios de dependencias descargadas localmente
+charts/
+# Archivos temporales de helm test
+.helm/
+
+# ----------------------------------------------------------------------
+# Docker & Contenedores
+# ----------------------------------------------------------------------
+# Directorios de builds locales
+.docker/
+
+# ----------------------------------------------------------------------
+# IDEs y Sistema Operativo (General)
+# ----------------------------------------------------------------------
+# macOS
+.DS_Store
+# VS Code
+.vscode/
+
+# ----------------------------------------------------------------------
+# Logs y Temporales Generales
+# ----------------------------------------------------------------------
+*.log
+tmp/
+temp/
+coverage/
+dist/
+build/
+
+# ----------------------------------------------------------------------
+# Dependencias del Lenguaje
+# ----------------------------------------------------------------------
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
