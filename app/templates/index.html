@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Servicios - Entorno {{ env|upper }}</title>
+    <!-- Añadimos un timestamp para evitar el caché del navegador -->
+    <link rel="shortcut icon" href="{{ url_for('favicon', v=2) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ url_for('favicon') }}" alt="Logo"
+                style="width: 64px; height: 64px; margin-bottom: 10px; border-radius: 50%;">
+            <h1>Estado de Servicios</h1>
+            <span class="env-badge env-{{ env }}">Entorno: {{ env }}</span>
+            <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                Servido por instancia: <strong>{{ hostname }}</strong>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="services">
+            <!-- PostgreSQL Status -->
+            <div class="service-card {{ db_status.status }}">
+                <div class="service-header">
+                    <div class="service-name">🐘 PostgreSQL</div>
+                    <div class="status-indicator">
+                        <span class="status-dot {{ db_status.status }}"></span>
+                        <span>{{ db_status.status|upper|replace('_', ' ') }}</span>
+                    </div>
+                </div>
+                <div class="service-message">{{ db_status.message }}</div>
+            </div>
+
+            {% if redis_status %}
+            <!-- Redis Status -->
+            <div class="service-card {{ redis_status.status }}">
+                <div class="service-header">
+                    <div class="service-name">⚡ Redis Cache</div>
+                    <div class="status-indicator">
+                        <span class="status-dot {{ redis_status.status }}"></span>
+                        <span>{{ redis_status.status|upper|replace('_', ' ') }}</span>
+                    </div>
+                </div>
+                <div class="service-message">{{ redis_status.message }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="actions">
+            <a href="/db-test" class="btn btn-secondary">Test Persistencia</a>
+        </div>
+
+        <div class="data-section">
+            <div class="section-header">
+                <h2>🚗 Coches registrados</h2>
+                <span class="section-subtitle">
+                    {% if cars_error %}
+                    No se pudo obtener la lista de coches en este momento.
+                    {% elif cars_from_cache %}
+                    Los datos provienen desde Redis (caché), sin consultar PostgreSQL.
+                    {% else %}
+                    Los datos provienen directamente de PostgreSQL.
+                    {% endif %}
+                </span>
+            </div>
+
+            {% if redis_status %}
+            <div class="message-card">
+                <h3>📝 Mensaje desde Redis</h3>
+                {% if redis_message_error %}
+                <p>No fue posible obtener el mensaje: {{ redis_message_error }}</p>
+                {% elif redis_message %}
+                <p><strong>Valor actual:</strong> {{ redis_message }}</p>
+                {% else %}
+                <p>No hay mensaje configurado. Establécelo con
+                    <code>redis-cli set {{ redis_message_key }} "Tu mensaje"</code>.
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if db_status.healthy %}
+            <form action="{{ url_for('add_car') }}" method="post">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="brand">Marca</label>
+                        <input class="form-input" type="text" id="brand" name="brand" placeholder="Ej. Toyota" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="model">Modelo</label>
+                        <input class="form-input" type="text" id="model" name="model" placeholder="Ej. Corolla"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="year">Año</label>
+                        <input class="form-input" type="number" id="year" name="year" min="1886" max="2100"
+                            placeholder="Ej. 2024" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-secondary">➕ Registrar coche</button>
+            </form>
+            {% endif %}
+
+            {% if cars_error %}
+            <div class="alert alert-error">No se pudieron cargar los coches: {{ cars_error }}</div>
+            {% elif cars %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Año</th>
+                        <th>Registrado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for car in cars %}
+                    <tr>
+                        <td>{{ car.id }}</td>
+                        <td>{{ car.brand }}</td>
+                        <td>{{ car.model }}</td>
+                        <td>{{ car.year }}</td>
+                        <td>{{ car.created_at.strftime('%Y-%m-%d %H:%M') if car.created_at else 'N/A' }}</td>
+                        <td style="text-align: right;">
+                            <form action="{{ url_for('remove_car', car_id=car.id) }}" method="post">
+                                <button type="submit" class="btn btn-primary btn-small">🗑️ Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                Aún no hay coches registrados. Inserta datos mediante psql y aparecerán aquí.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+
+</html>
