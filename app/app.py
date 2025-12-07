@@ -396,30 +396,33 @@ def delete_car(car_id):
         if conn:
             conn.close()
 
+
 def get_minio_client():
     try:
         # Ensure endpoint starts with http protocol if not present
         endpoint = MINIO_ENDPOINT
         if not endpoint.startswith('http'):
             endpoint = f"http://{endpoint}"
-            
+
         s3 = boto3.client('s3',
                           endpoint_url=endpoint,
                           aws_access_key_id=MINIO_ACCESS_KEY,
                           aws_secret_access_key=MINIO_SECRET_KEY,
-                          config=boto3.session.Config(signature_version='s3v4'),
+                          config=boto3.session.Config(
+                              signature_version='s3v4'),
                           region_name='us-east-1')
         return s3
     except Exception as e:
         print(f"Error connecting to MinIO: {e}")
         return None
 
+
 @app.route('/favicon.ico')
 def favicon():
     s3 = get_minio_client()
     if not s3:
         return "MinIO unavailable", 503
-    
+
     try:
         # Fetch the file from MinIO and stream it to the user
         file_obj = s3.get_object(Bucket=MINIO_BUCKET, Key='favicon.ico')
@@ -535,7 +538,7 @@ def health():
     cars_count = None
     cars_from_cache = False
     redis_message = None
-    
+
     # Intentar obtener coches (priorizando caché)
     cars, error, cars_from_cache = get_cars()
     if not error:

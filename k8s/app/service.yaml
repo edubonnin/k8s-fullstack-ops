@@ -7,5 +7,5 @@ spec:
   selector:
     app: app
   ports:
-    - port: 80        # Puerto del servicio
-      targetPort: 5000  # A donde se redirige el tráfico (hacia el container)
+    - port: 80 # Puerto del servicio
+      targetPort: 5000 # A donde se redirige el tráfico (hacia el container)

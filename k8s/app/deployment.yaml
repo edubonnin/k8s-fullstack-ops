@@ -13,11 +13,11 @@ spec:
         app: app
     spec:
       containers:
-      - name: app-container
-        image: app-image:v1  # Versión 1
-        ports:
-        - containerPort: 5000
-        imagePullPolicy: Never
-        # env:
-        # - name: ENV
-        #   value: "dev"
+        - name: app-container
+          image: app-image:v1 # Versión 1
+          ports:
+            - containerPort: 5000
+          imagePullPolicy: Never
+          # env:
+          # - name: ENV
+          #   value: "dev"
