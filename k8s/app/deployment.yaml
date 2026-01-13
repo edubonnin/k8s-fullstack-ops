@@ -17,6 +17,12 @@ spec:
           image: app-image:v1
           ports:
             - containerPort: 5000
+          # Entrypoint: ejecuta el upload antes de arrancar la app para ver logs y asegurar disponibilidad
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              python /app/upload_assets.py && \
+              gunicorn --bind 0.0.0.0:5000 --workers 2 --timeout 60 app:app
           imagePullPolicy: Never
           env:
           # Entorno en el que nos encontramos
@@ -53,3 +59,24 @@ spec:
               configMapKeyRef:
                 name: infra-config
                 key: REDIS_HOST
+          # Configuración MinIO
+          - name: MINIO_ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                name: infra-config
+                key: MINIO_ENDPOINT
+          - name: MINIO_BUCKET
+            valueFrom:
+              configMapKeyRef:
+                name: infra-config
+                key: MINIO_BUCKET
+          - name: MINIO_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: infra-secrets
+                key: MINIO_ACCESS_KEY
+          - name: MINIO_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: infra-secrets
+                key: MINIO_SECRET_KEY

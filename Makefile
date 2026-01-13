@@ -21,7 +21,7 @@ deploy-dev: import ## 2. Despliega DEV (sin Redis)
 	kubectl config use-context $(DEV)
 	kubectl create ns dev --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -n dev -f k8s/infra/config-dev.yaml -f k8s/infra/secrets.yaml
-	kubectl apply -n dev -f k8s/infra/postgres.yaml -f k8s/infra/init-db.yaml
+	kubectl apply -n dev -f k8s/infra/postgres.yaml -f k8s/infra/init-db.yaml -f k8s/infra/minio.yaml -f k8s/infra/minio-init.yaml
 	kubectl apply -n dev -f k8s/app/deployment.yaml -f k8s/app/service.yaml
 	@echo "✅ DEV listo. Run: make tunnel-dev"
 
@@ -30,9 +30,15 @@ deploy-prod: import ## 2. Despliega PROD (con Redis)
 	kubectl create ns pro --dry-run=client -o yaml | kubectl apply -f -
 	kubectl create ns monitoring --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -n pro -f k8s/infra/config-prod.yaml -f k8s/infra/secrets.yaml
-	kubectl apply -n pro -f k8s/infra/postgres.yaml -f k8s/infra/init-db.yaml -f k8s/infra/redis.yaml
+	kubectl apply -n pro -f k8s/infra/postgres.yaml -f k8s/infra/init-db.yaml -f k8s/infra/redis.yaml -f k8s/infra/minio.yaml -f k8s/infra/minio-init.yaml
 	kubectl apply -n pro -f k8s/app/deployment.yaml -f k8s/app/service.yaml
 	@echo "✅ PROD listo. Run: make tunnel-prod"
+
+logs-dev: ## Muestra logs del pod de la app en DEV
+	kubectl logs -n dev -l app=app
+
+logs-prod: ## Muestra logs del pod de la app en PROD
+	kubectl logs -n pro -l app=app
 
 tunnel-dev:; kubectl port-forward --context $(DEV) -n dev svc/app-service 9001:80
 tunnel-prod:; kubectl port-forward --context $(PROD) -n pro svc/app-service 9002:80

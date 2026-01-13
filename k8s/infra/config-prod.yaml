@@ -7,3 +7,5 @@ data:
   DB_NAME: "appdb"
   ENV: "prod"
   REDIS_HOST: "redis-service"
+  MINIO_ENDPOINT: "minio-server:9000"
+  MINIO_BUCKET: "assets"

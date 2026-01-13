@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-init
+spec:
+  template:
+    spec:
+      containers:
+        - name: minio-mc
+          image: minio/mc
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "⏳ Esperando a MinIO..."
+              until mc alias set myminio http://minio-server:9000 minioadmin minioadmin; do
+                echo "... esperando ..."
+                sleep 2
+              done
+              
+              echo "📦 Creando bucket 'assets'..."
+              mc mb myminio/assets --ignore-existing
+              
+              echo "🔓 Haciendo bucket público..."
+              mc anonymous set download myminio/assets
+              
+              echo "✅ MinIO configurado."
+      restartPolicy: OnFailure
