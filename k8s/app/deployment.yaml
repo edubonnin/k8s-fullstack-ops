@@ -18,6 +18,28 @@ spec:
           ports:
             - containerPort: 5000
           imagePullPolicy: Never
-          # env:
+          env:
+          # Conexión a Postgres
+          - name: DB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: infra-config
+                key: DB_HOST
+          - name: DB_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: infra-config
+                key: DB_NAME
+          # Credenciales Postges
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: infra-secrets
+                key: DB_USER
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: infra-secrets
+                key: DB_PASSWORD
           # - name: ENV
           #   value: "dev"

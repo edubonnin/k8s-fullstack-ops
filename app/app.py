@@ -3,6 +3,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import psycopg2
 import redis
 import os
+import sys
 import json
 from datetime import datetime
 import boto3
@@ -14,14 +15,21 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key')
 
-# Configuración desde variables de entorno
+# Configuración de variables de entorno
 ENV = os.getenv('ENV', 'dev').lower()
 
-DB_HOST = os.getenv('DB_HOST', 'localhost')
+try:
+    DB_HOST = os.environ['DB_HOST']
+    DB_USER = os.environ['DB_USER']
+    DB_PASSWORD = os.environ['DB_PASSWORD']
+    DB_NAME = os.environ['DB_NAME']
+except KeyError as e:
+    # Mensaje claro en los logs de Kubernetes antes de morir
+    print(f"❌ ERROR DE CONFIGURACIÓN: Falta la variable de entorno obligatoria {e}")
+    sys.exit(1)
+
+# Variables no críticas (pueden tener fallback)
 DB_PORT = os.getenv('DB_PORT', '5432')
-DB_NAME = os.getenv('DB_NAME', 'appdb')
-DB_USER = os.getenv('DB_USER', 'user')
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
 
 if ENV == 'prod':
     REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
