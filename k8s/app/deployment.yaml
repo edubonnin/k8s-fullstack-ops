@@ -14,11 +14,17 @@ spec:
     spec:
       containers:
         - name: app-container
-          image: app-image:v1 # Versión 1
+          image: app-image:v1
           ports:
             - containerPort: 5000
           imagePullPolicy: Never
           env:
+          # Entorno en el que nos encontramos
+          - name: ENV
+            valueFrom:
+              configMapKeyRef:
+                name: infra-config
+                key: ENV
           # Conexión a Postgres
           - name: DB_HOST
             valueFrom:
@@ -41,5 +47,9 @@ spec:
               secretKeyRef:
                 name: infra-secrets
                 key: DB_PASSWORD
-          # - name: ENV
-          #   value: "dev"
+          # Conexión a Redis
+          - name: REDIS_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: infra-config
+                key: REDIS_HOST

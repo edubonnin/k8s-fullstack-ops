@@ -1,4 +1,3 @@
-# --- CONFIGURACIÓN ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,3 +5,5 @@ metadata:
 data:
   DB_HOST: "postgres-service"
   DB_NAME: "appdb"
+  ENV: "dev"
+  REDIS_HOST: "" # No se usa en dev
