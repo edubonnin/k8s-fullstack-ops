@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce        # Solo un nodo puede escribir a la vez
+  resources:
+    requests:
+      storage: 200Mi
+
+---
+
+# --- RED ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+
+---
+# --- APLICACIÓN ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres-container
+          image: postgres:16.11-alpine3.23
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: infra-config
+                  key: DB_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: infra-secrets
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: infra-secrets
+                  key: DB_PASSWORD
+          volumeMounts:
+            # 1. Persistencia
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+            # 2. Script de inicialización
+            - name: init-db-vol
+              mountPath: /docker-entrypoint-initdb.d/init.sql
+              subPath: init.sql  # Importante para montar solo el archivo, no tapar la carpeta
+              
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+        - name: init-db-vol
+          configMap:
+            name: postgres-init-script
