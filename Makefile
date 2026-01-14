@@ -1,7 +1,7 @@
 # Makefile: Gestión de K8s multi-cluster (Dev/Pro)
 DEV=k3d-dev-cluster
 PRO=k3d-prod-cluster
-IMG=app-image:v1
+IMG ?= app-image:v1
 
 .PHONY: clusters clean switch-dev switch-pro stop-dev start-dev deploy-dev deploy-pro tunnel-dev tunnel-pro
 
@@ -36,6 +36,8 @@ deploy-dev: import ## 2. Despliega DEV (sin Redis)
 	kubectl apply -n dev -f k8s/base/platform/postgres.yaml -f k8s/base/platform/db-init.yaml -f k8s/base/platform/minio.yaml -f k8s/base/platform/minio-init.yaml
 	# App Base + Ingress Específico
 	kubectl apply -n dev -f k8s/base/app/deployment.yaml -f k8s/base/app/service.yaml -f k8s/environments/dev/ingress.yaml
+	# Forzar uso de imagen
+	kubectl set image deployment/app-deployment app-container=$(IMG) -n dev
 	# Escalar a 2 réplicas para HA en Dev
 	kubectl scale deployment app-deployment --replicas=2 -n dev
 	# Monitorización
@@ -52,6 +54,8 @@ deploy-pro: import ## 2. Despliega PRO (con Redis)
 	kubectl apply -n pro -f k8s/base/platform/postgres.yaml -f k8s/base/platform/db-init.yaml -f k8s/base/platform/redis.yaml -f k8s/base/platform/minio.yaml -f k8s/base/platform/minio-init.yaml
 	# App Base + Ingress Específico
 	kubectl apply -n pro -f k8s/base/app/deployment.yaml -f k8s/base/app/service.yaml -f k8s/environments/pro/ingress.yaml
+	# Forzar uso de imagen
+	kubectl set image deployment/app-deployment app-container=$(IMG) -n pro
 	# Escalar a 4 réplicas para HA en Pro
 	kubectl scale deployment app-deployment --replicas=4 -n pro
 	# Monitorización

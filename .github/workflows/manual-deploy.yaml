@@ -2,11 +2,12 @@ name: Manual Build & Deploy
 
 on:
   workflow_dispatch:
+    # Definición del formulario
     inputs:
       image_tag:
         description: 'Tag para la nueva imagen Docker'
         required: true
-        default: 'v1.0.0'
+        default: 'v1.0.0' # Versión por defecto
       environment:
         description: 'Entorno de despliegue (informativo)'
         required: false
@@ -42,7 +43,7 @@ jobs:
           flake8 app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       # 2. Tests Simulados
-      - name: 🧪 Ejecutar Tests (Simulados)
+      - name: 🧪 Tests
         run: |
           echo "Iniciando suite de pruebas unitarias..."
           sleep 1
@@ -65,27 +66,31 @@ jobs:
         with:
           context: ./app
           push: true
-          # Se asume que el usuario de Docker Hub está en el secreto y se usa como namespace
           tags: ${{ secrets.DOCKER_USERNAME }}/k8s-fullstack-app:${{ inputs.image_tag }}
 
-      # 4. Despliegue Simulado (Instrucciones)
+      # 4. Instrucciones de Despliegue
       - name: 🚀 Instrucciones de Despliegue
         run: |
           echo "========================================================"
-          echo "✅ IMAGEN CONSTRUIDA: ${{ secrets.DOCKER_USERNAME }}/k8s-fullstack-app:${{ inputs.image_tag }}"
+          echo "✅ CI COMPLETADO: ${{ secrets.DOCKER_USERNAME }}/k8s-fullstack-app:${{ inputs.image_tag }}"
           echo "========================================================"
           echo ""
-          echo "Para actualizar el entorno ${{ inputs.environment }} en tu máquina local:"
+          echo "🛠  PARA DESPLEGAR EN ENTORNO LOCAL (${{ inputs.environment }}):"
           echo ""
-          echo "1️⃣ Abre tu terminal en el proyecto."
-          echo "2️⃣ Actualiza la variable IMG en tu Makefile o exportala:"
+          echo "1️⃣  Define la versión:"
           echo "   export IMG=${{ secrets.DOCKER_USERNAME }}/k8s-fullstack-app:${{ inputs.image_tag }}"
           echo ""
-          echo "3️⃣ Ejecuta el comando de despliegue:"
+          echo "2️⃣  Actualiza el cluster:"
           if [ "${{ inputs.environment }}" == "pro" ]; then
             echo "   make deploy-pro"
+            echo ""
+            echo "🌐 Acceso App: http://app.pro.localhost:8080"
+            echo "📊 Grafana:    make grafana-pro"
           else
             echo "   make deploy-dev"
+            echo ""
+            echo "🌐 Acceso App: http://app.dev.localhost:8081"
+            echo "📊 Grafana:    make grafana-dev"
           fi
           echo ""
           echo "========================================================"
