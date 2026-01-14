@@ -22,8 +22,10 @@ deploy-dev: import ## 2. Despliega DEV (sin Redis)
 	kubectl create ns dev --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -n dev -f k8s/infra/config-dev.yaml -f k8s/infra/secrets.yaml
 	kubectl apply -n dev -f k8s/infra/postgres.yaml -f k8s/infra/init-db.yaml -f k8s/infra/minio.yaml -f k8s/infra/minio-init.yaml
-	kubectl apply -n dev -f k8s/app/deployment.yaml -f k8s/app/service.yaml
-	@echo "✅ DEV listo. Run: make tunnel-dev"
+	kubectl apply -n dev -f k8s/app/deployment.yaml -f k8s/app/service.yaml -f k8s/app/ingress.yaml
+	# Escalar a 2 réplicas para HA en Dev
+	kubectl scale deployment app-deployment --replicas=2 -n dev
+	@echo "✅ DEV listo (2 Replicas). Accede vía http://localhost:8081"
 
 deploy-prod: import ## 2. Despliega PROD (con Redis)
 	kubectl config use-context $(PROD)
@@ -31,8 +33,12 @@ deploy-prod: import ## 2. Despliega PROD (con Redis)
 	kubectl create ns monitoring --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -n pro -f k8s/infra/config-prod.yaml -f k8s/infra/secrets.yaml
 	kubectl apply -n pro -f k8s/infra/postgres.yaml -f k8s/infra/init-db.yaml -f k8s/infra/redis.yaml -f k8s/infra/minio.yaml -f k8s/infra/minio-init.yaml
-	kubectl apply -n pro -f k8s/app/deployment.yaml -f k8s/app/service.yaml
-	@echo "✅ PROD listo. Run: make tunnel-prod"
+	kubectl apply -n pro -f k8s/app/deployment.yaml -f k8s/app/service.yaml -f k8s/app/ingress.yaml
+	# Escalar a 4 réplicas para HA en Prod
+	kubectl scale deployment app-deployment --replicas=4 -n pro
+	@echo "✅ PROD listo (4 Replicas). Accede vía http://localhost:8080"
+
+
 
 logs-dev: ## Muestra logs del pod de la app en DEV
 	kubectl logs -n dev -l app=app
