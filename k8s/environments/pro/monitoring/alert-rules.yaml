@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: app-alerts
+  namespace: pro
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: app.rules
+    rules:
+    - alert: AppLowReplicas
+      expr: kube_deployment_status_replicas_available{deployment="app-deployment", namespace="pro"} < 2
+      for: 30s
+      labels:
+        severity: warning
+      annotations:
+        summary: "La app tiene menos de 2 réplicas disponibles"
+        description: "Pocas réplicas activas en PRO."
