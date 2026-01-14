@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: minio-init
+  name: minio-init-job
 spec:
   template:
     spec:
@@ -12,7 +12,7 @@ spec:
           args:
             - |
               echo "⏳ Esperando a MinIO..."
-              until mc alias set myminio http://minio-server:9000 minioadmin minioadmin; do
+              until mc alias set myminio http://minio-service:9000 minioadmin minioadmin; do
                 echo "... esperando ..."
                 sleep 2
               done

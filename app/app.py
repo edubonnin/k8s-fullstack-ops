@@ -31,7 +31,7 @@ except KeyError as e:
 # Variables no críticas (pueden tener fallback)
 DB_PORT = os.getenv('DB_PORT', '5432')
 
-if ENV == 'prod':
+if ENV == 'pro':
     REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
 else:
     REDIS_HOST = None
@@ -43,7 +43,7 @@ CARS_CACHE_TTL = int(os.getenv('CARS_CACHE_TTL', '300'))
 REDIS_ENABLED = REDIS_HOST is not None
 
 # MinIO Config
-MINIO_ENDPOINT = os.getenv('MINIO_ENDPOINT', 'minio-server:9000')
+MINIO_ENDPOINT = os.getenv('MINIO_ENDPOINT', 'minio-service:9000')
 MINIO_ACCESS_KEY = os.getenv('MINIO_ACCESS_KEY', 'minioadmin')
 MINIO_SECRET_KEY = os.getenv('MINIO_SECRET_KEY', 'minioadmin')
 MINIO_BUCKET = os.getenv('MINIO_BUCKET', 'assets')

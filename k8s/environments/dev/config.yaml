@@ -5,7 +5,7 @@ metadata:
 data:
   DB_HOST: "postgres-service"
   DB_NAME: "appdb"
-  ENV: "prod"
-  REDIS_HOST: "redis-service"
-  MINIO_ENDPOINT: "minio-server:9000"
+  ENV: "dev"
+  REDIS_HOST: "" # No se usa en dev
+  MINIO_ENDPOINT: "minio-service:9000"
   MINIO_BUCKET: "assets"
