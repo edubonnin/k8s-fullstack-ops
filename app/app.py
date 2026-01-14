@@ -8,8 +8,12 @@ import json
 from datetime import datetime
 import boto3
 from botocore.exceptions import ClientError
+from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
+metrics = PrometheusMetrics(app)
+metrics.info('app_info', 'Application info', version='1.0.0')
+
 # Aplicar ProxyFix para manejar correctamente las cabeceras del Load Balancer (Nginx)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 

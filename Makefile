@@ -38,12 +38,14 @@ deploy-dev: import ## 2. Despliega DEV (sin Redis)
 	kubectl apply -n dev -f k8s/base/app/deployment.yaml -f k8s/base/app/service.yaml -f k8s/environments/dev/ingress.yaml
 	# Escalar a 2 réplicas para HA en Dev
 	kubectl scale deployment app-deployment --replicas=2 -n dev
-	@echo "✅ DEV listo (2 Replicas). Accede vía http://app.dev.localhost:8081"
+	# Monitorización
+	$(MAKE) deploy-monitoring-dev
+	@echo "✅ DEV listo (2 Replicas + Monitorización). Accede vía http://app.dev.localhost:8081"
+	@echo "📊 Grafana DEV -> 'make grafana-dev'"
 
 deploy-pro: import ## 2. Despliega PRO (con Redis)
 	kubectl config use-context $(PRO)
 	kubectl create ns pro --dry-run=client -o yaml | kubectl apply -f -
-	kubectl create ns monitoring --dry-run=client -o yaml | kubectl apply -f -
 	# Entorno
 	kubectl apply -n pro -f k8s/environments/pro/config.yaml -f k8s/environments/pro/secrets.yaml
 	# Plataforma Base (incluye Redis)
@@ -52,7 +54,47 @@ deploy-pro: import ## 2. Despliega PRO (con Redis)
 	kubectl apply -n pro -f k8s/base/app/deployment.yaml -f k8s/base/app/service.yaml -f k8s/environments/pro/ingress.yaml
 	# Escalar a 4 réplicas para HA en Pro
 	kubectl scale deployment app-deployment --replicas=4 -n pro
-	@echo "✅ PRO listo (4 Replicas). Accede vía http://app.pro.localhost:8080"
+	# Monitorización
+	$(MAKE) deploy-monitoring-pro
+	@echo "✅ PRO listo (4 Replicas + Monitorización). Accede vía http://app.pro.localhost:8080"
+	@echo "📊 Grafana PRO -> 'make grafana-pro'"
+
+deploy-monitoring-dev: ## Despliega Prometheus y Grafana en DEV
+	kubectl config use-context $(DEV)
+	kubectl create ns monitoring --dry-run=client -o yaml | kubectl apply -f -
+	# Secretos
+	kubectl apply -f k8s/environments/dev/monitoring/secrets.yaml
+	# Helm
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	helm repo update
+	helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+		--namespace monitoring \
+		--set grafana.admin.existingSecret=grafana-admin-credentials \
+		--set grafana.admin.userKey=admin-user \
+		--set grafana.admin.passwordKey=admin-password
+	# Aplicar monitores y alertas
+	kubectl apply -f k8s/environments/dev/monitoring/service-monitor.yaml
+	kubectl apply -f k8s/environments/dev/monitoring/alert-rules.yaml
+	@echo "✅ Monitorización DEV desplegada (Password en k8s/environments/dev/monitoring/secrets.yaml)"
+
+deploy-monitoring-pro: ## Despliega Prometheus y Grafana en PRO
+	kubectl config use-context $(PRO)
+	kubectl create ns monitoring --dry-run=client -o yaml | kubectl apply -f -
+	# Secretos
+	kubectl apply -f k8s/environments/pro/monitoring/secrets.yaml
+	# Helm
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	helm repo update
+	helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+		--namespace monitoring \
+		--set grafana.admin.existingSecret=grafana-admin-credentials \
+		--set grafana.admin.userKey=admin-user \
+		--set grafana.admin.passwordKey=admin-password
+	# Aplicar monitores y alertas
+	kubectl apply -f k8s/environments/pro/monitoring/service-monitor.yaml
+	kubectl apply -f k8s/environments/pro/monitoring/alert-rules.yaml
+	@echo "✅ Monitorización PRO desplegada (Password en k8s/environments/pro/monitoring/secrets.yaml)"
+
 
 
 
@@ -74,3 +116,21 @@ test-pro: ## Ejecuta tests contra PRO
 	@echo "🧪 Ejecutando tests contra entorno PRO..."
 	pip install -q -r tests/requirements.txt
 	TEST_URL=http://app.pro.localhost:8080 pytest tests/ -v
+
+# --- Accesos y Monitorización ---
+
+grafana-pro: ## Acceso a Grafana PRO (Port 3000)
+	@echo "📊 Abriendo Grafana PRO en http://localhost:3000 (User: admin)"
+	kubectl --context $(PRO) -n monitoring port-forward svc/kube-prometheus-stack-grafana 3000:80
+
+prometheus-pro: ## Acceso a Prometheus PRO (Port 9090)
+	@echo "📈 Abriendo Prometheus PRO en http://localhost:9090"
+	kubectl --context $(PRO) -n monitoring port-forward svc/kube-prometheus-stack-prometheus 9090:9090
+
+grafana-dev: ## Acceso a Grafana DEV (Port 3001)
+	@echo "📊 Abriendo Grafana DEV en http://localhost:3001 (User: admin)"
+	kubectl --context $(DEV) -n monitoring port-forward svc/kube-prometheus-stack-grafana 3001:80
+
+prometheus-dev: ## Acceso a Prometheus DEV (Port 9091)
+	@echo "📈 Abriendo Prometheus DEV en http://localhost:9091"
+	kubectl --context $(DEV) -n monitoring port-forward svc/kube-prometheus-stack-prometheus 9091:9090
