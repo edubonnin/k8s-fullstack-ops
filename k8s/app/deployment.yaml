@@ -17,6 +17,21 @@ spec:
           image: app-image:v1
           ports:
             - containerPort: 5000
+          # Verificar que los pods están sanos:
+          # Verifica que el proceso (contenedor) escucha en el puerto 5000, si no lo mata y reinicia
+          livenessProbe:
+            tcpSocket:
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          # Comprueba que la app está disponible para recibir tráfico (hablar con la BD y Redis), si no lo corta
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
           # Entrypoint: ejecuta el upload antes de arrancar la app para ver logs y asegurar disponibilidad
           command: ["/bin/sh", "-c"]
           args:
