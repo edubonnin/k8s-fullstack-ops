@@ -22,10 +22,10 @@ deploy-dev: import ## 2. Despliega DEV (sin Redis)
 	kubectl create ns dev --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -n dev -f k8s/infra/config-dev.yaml -f k8s/infra/secrets.yaml
 	kubectl apply -n dev -f k8s/infra/postgres.yaml -f k8s/infra/init-db.yaml -f k8s/infra/minio.yaml -f k8s/infra/minio-init.yaml
-	kubectl apply -n dev -f k8s/app/deployment.yaml -f k8s/app/service.yaml -f k8s/app/ingress.yaml
+	kubectl apply -n dev -f k8s/app/deployment.yaml -f k8s/app/service.yaml -f k8s/app/ingress-dev.yaml
 	# Escalar a 2 réplicas para HA en Dev
 	kubectl scale deployment app-deployment --replicas=2 -n dev
-	@echo "✅ DEV listo (2 Replicas). Accede vía http://localhost:8081"
+	@echo "✅ DEV listo (2 Replicas). Accede vía http://app.dev.localhost:8081"
 
 deploy-prod: import ## 2. Despliega PROD (con Redis)
 	kubectl config use-context $(PROD)
@@ -33,10 +33,10 @@ deploy-prod: import ## 2. Despliega PROD (con Redis)
 	kubectl create ns monitoring --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -n pro -f k8s/infra/config-prod.yaml -f k8s/infra/secrets.yaml
 	kubectl apply -n pro -f k8s/infra/postgres.yaml -f k8s/infra/init-db.yaml -f k8s/infra/redis.yaml -f k8s/infra/minio.yaml -f k8s/infra/minio-init.yaml
-	kubectl apply -n pro -f k8s/app/deployment.yaml -f k8s/app/service.yaml -f k8s/app/ingress.yaml
+	kubectl apply -n pro -f k8s/app/deployment.yaml -f k8s/app/service.yaml -f k8s/app/ingress-prod.yaml
 	# Escalar a 4 réplicas para HA en Prod
 	kubectl scale deployment app-deployment --replicas=4 -n pro
-	@echo "✅ PROD listo (4 Replicas). Accede vía http://localhost:8080"
+	@echo "✅ PROD listo (4 Replicas). Accede vía http://app.pro.localhost:8080"
 
 
 
@@ -48,3 +48,13 @@ logs-prod: ## Muestra logs del pod de la app en PROD
 
 tunnel-dev:; kubectl port-forward --context $(DEV) -n dev svc/app-service 9001:80
 tunnel-prod:; kubectl port-forward --context $(PROD) -n pro svc/app-service 9002:80
+
+test-dev: ## Ejecuta tests contra DEV
+	@echo "🧪 Ejecutando tests contra entorno DEV..."
+	pip install -q -r tests/requirements.txt
+	TEST_URL=http://app.dev.localhost:8081 pytest tests/ -v
+
+test-prod: ## Ejecuta tests contra PROD
+	@echo "🧪 Ejecutando tests contra entorno PROD..."
+	pip install -q -r tests/requirements.txt
+	TEST_URL=http://app.pro.localhost:8080 pytest tests/ -v
