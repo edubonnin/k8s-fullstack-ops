@@ -150,12 +150,16 @@ El `Makefile` es el centro de control del proyecto. Aquí tienes los comandos m�
 ### Monitorización y Acceso
 | Comando | Descripción |
 | :--- | :--- |
-| `make grafana-dev` | Abre túnel al Grafana de DEV (User/Pass: `admin`/`admin`). |
+| `make grafana-dev` | Abre túnel al Grafana de DEV. |
 | `make grafana-pro` | Abre túnel al Grafana de PRO. |
 | `make prometheus-dev` | Abre túnel al Prometheus de DEV. |
+| `make prometheus-pro` | Abre túnel al Prometheus de PRO. |
+
 
 ### Utilidades
 | Comando | Descripción |
 | :--- | :--- |
 | `make logs-dev` | Muestra logs de los pods de la app en Desarrollo. |
 | `make switch-dev` | Cambia el contexto de tu terminal a Desarrollo. |
+| `make logs-pro` | Muestra logs de los pods de la app en Producción. |
+| `make switch-pro` | Cambia el contexto de tu terminal a Producción. |
