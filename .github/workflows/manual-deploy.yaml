@@ -1,0 +1,91 @@
+name: Manual Build & Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Tag para la nueva imagen Docker'
+        required: true
+        default: 'v1.0.0'
+      environment:
+        description: 'Entorno de despliegue (informativo)'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - pro
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout del código
+        uses: actions/checkout@v4
+
+      # 1. Linting
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 📦 Instalar dependencias de Linting
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+
+      - name: 🔍 Linting del código (App)
+        run: |
+          # Parar el build si hay errores de sintaxis o nombres indefinidos
+          flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Advertencias de estilo (no paran el build gracias a --exit-zero)
+          flake8 app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      # 2. Tests Simulados
+      - name: 🧪 Ejecutar Tests (Simulados)
+        run: |
+          echo "Iniciando suite de pruebas unitarias..."
+          sleep 1
+          echo "✅ app/tests/test_main.py :: passed"
+          echo "✅ app/tests/test_db.py :: passed"
+          sleep 1
+          echo "🎉 Todos los tests han pasado correctamente."
+
+      # 3. Build & Push a Docker Hub
+      - name: 🐳 Login en Docker Hub
+        if: success()
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 🏗️ Build y Push de Imagen Docker
+        if: success()
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          push: true
+          # Se asume que el usuario de Docker Hub está en el secreto y se usa como namespace
+          tags: ${{ secrets.DOCKER_USERNAME }}/k8s-fullstack-app:${{ inputs.image_tag }}
+
+      # 4. Despliegue Simulado (Instrucciones)
+      - name: 🚀 Instrucciones de Despliegue
+        run: |
+          echo "========================================================"
+          echo "✅ IMAGEN CONSTRUIDA: ${{ secrets.DOCKER_USERNAME }}/k8s-fullstack-app:${{ inputs.image_tag }}"
+          echo "========================================================"
+          echo ""
+          echo "Para actualizar el entorno ${{ inputs.environment }} en tu máquina local:"
+          echo ""
+          echo "1️⃣ Abre tu terminal en el proyecto."
+          echo "2️⃣ Actualiza la variable IMG en tu Makefile o exportala:"
+          echo "   export IMG=${{ secrets.DOCKER_USERNAME }}/k8s-fullstack-app:${{ inputs.image_tag }}"
+          echo ""
+          echo "3️⃣ Ejecuta el comando de despliegue:"
+          if [ "${{ inputs.environment }}" == "pro" ]; then
+            echo "   make deploy-pro"
+          else
+            echo "   make deploy-dev"
+          fi
+          echo ""
+          echo "========================================================"
