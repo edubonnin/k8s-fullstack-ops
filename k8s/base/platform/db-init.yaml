@@ -12,6 +12,12 @@ data:
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS health_logs (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMP,
+        status VARCHAR(50)
+    );
+
     INSERT INTO cars (brand, model, year) VALUES 
     ('Toyota', 'Corolla', 2020),
     ('Ford', 'Mustang', 1969);
