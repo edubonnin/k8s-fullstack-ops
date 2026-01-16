@@ -48,8 +48,8 @@ REDIS_ENABLED = REDIS_HOST is not None
 
 # MinIO Config
 MINIO_ENDPOINT = os.getenv('MINIO_ENDPOINT', 'minio-service:9000')
-MINIO_ACCESS_KEY = os.getenv('MINIO_ACCESS_KEY', 'minioadmin')
-MINIO_SECRET_KEY = os.getenv('MINIO_SECRET_KEY', 'minioadmin')
+MINIO_ACCESS_KEY = os.getenv('MINIO_ACCESS_KEY')
+MINIO_SECRET_KEY = os.getenv('MINIO_SECRET_KEY')
 MINIO_BUCKET = os.getenv('MINIO_BUCKET', 'assets')
 
 _redis_client = None
@@ -92,8 +92,6 @@ def invalidate_cars_cache():
         print(f"No se pudo invalidar la caché de coches: {exc}")
 
 # Verifica conexión con Postgres
-
-
 def check_database():
     try:
         conn = psycopg2.connect(
@@ -118,8 +116,6 @@ def check_database():
         }
 
 # Verifica conexión con Redis
-
-
 def check_redis():
     if not REDIS_ENABLED:
         return None
@@ -147,8 +143,6 @@ def check_redis():
         }
 
 # Inicializa la base de datos con una tabla de ejemplo"""
-
-
 def init_database():
     try:
         conn = psycopg2.connect(
@@ -193,8 +187,6 @@ def init_database():
         return False
 
 # Registra el healthcheck en la base de datos"""
-
-
 def log_health_check():
     try:
         conn = psycopg2.connect(
@@ -218,8 +210,6 @@ def log_health_check():
         print(f"Error logging health check: {e}")
 
 # Uso de caché con redis
-
-
 def get_cached_data():
     if not REDIS_ENABLED:
         return None
@@ -248,8 +238,6 @@ def get_cached_data():
         return None
 
 # Recupera la lista de coches registrados con soporte de caché
-
-
 def get_cars(use_cache=True):
     cache_client = get_redis_client() if REDIS_ENABLED else None
 
@@ -328,8 +316,6 @@ def get_cars(use_cache=True):
             conn.close()
 
 # Inserta un coche en la base de datos
-
-
 def create_car(brand, model, year):
     conn = None
     try:
@@ -379,8 +365,6 @@ def get_redis_message():
         return None, str(exc)
 
 # Eliminación de coche por ID
-
-
 def delete_car(car_id):
     conn = None
     try:
@@ -447,8 +431,6 @@ def favicon():
         return str(e), 500
 
 # Endpoint raíz -> Página principal
-
-
 @app.route('/')
 def index():
     db_status = check_database()
@@ -489,8 +471,6 @@ def index():
     )
 
 # Formulario para añadir coches
-
-
 @app.route('/cars', methods=['POST'])
 def add_car():
     brand = request.form.get('brand', '').strip()
@@ -521,8 +501,6 @@ def add_car():
     return redirect(url_for('index'))
 
 # Eliminación de coches
-
-
 @app.route('/cars/<int:car_id>/delete', methods=['POST'])
 def remove_car(car_id):
     success, error = delete_car(car_id)
@@ -533,8 +511,6 @@ def remove_car(car_id):
     return redirect(url_for('index'))
 
 # Registro de dos endpoints para healthcheck
-
-
 @app.route('/status')
 @app.route('/health')
 def health():
@@ -588,8 +564,6 @@ def health():
     return jsonify(response), status_code
 
 # Endpoint para testear persistencia
-
-
 @app.route('/db-test')
 def db_test():
     try:
