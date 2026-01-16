@@ -84,7 +84,7 @@ graph TD
 2.  **Desplegar Entorno DEV**:
     ```bash
     make deploy-dev
-    # Despliega App + BD + MinIO + Monitorización
+    # Despliega App + BD + MinIO + Monitorización  (HA: 2 réplicas)
     ```
     *   🌐 **URL**: `http://app.dev.localhost:8081`
 
@@ -131,35 +131,30 @@ tests/test_integration.py::test_metrics_endpoint PASSED                [100%]
 
 ---
 
-## 📦 Uso de Makefile
+## ️ Comandos Operativos (Entorno Producción)
 
-El `Makefile` es el centro de control del proyecto. Aquí tienes los comandos más importantes:
+Aquí se listan los comandos principales enfocados en **Producción** (existen equivalentes para Dev terminados en `-dev`).
 
-### Ciclo de Vida
+### 🛠️ Gestión y Accesos
 | Comando | Descripción |
 | :--- | :--- |
-| `make clusters` | Crea los clusters `dev` y `pro` en Docker. |
-| `make clean` | Destruye ambos clusters y limpia recursos. |
+| `make switch-pro` | Cambia tu contexto de kubectl a PRO. |
+| `make logs-pro` | Muestra logs de la aplicación en tiempo real. |
+| `make tunnel-pro` | Abre un túnel directo al servicio (Puerto 9002). |
 
-### Despliegues
+### 📊 Observabilidad
 | Comando | Descripción |
 | :--- | :--- |
-| `make deploy-dev` | Construye imagen, la importa en Dev y despliega k8s manifests. |
-| `make deploy-pro` | Igual que dev, pero con configuración de Producción (Redis, más réplicas). |
+| `make grafana-pro` | Abre Grafana (User: `admin`). |
+| `make prometheus-pro` | Abre Prometheus para consultar métricas. |
 
-### Monitorización y Acceso
+### 🧪 Tests & Chaos Engineering (Simulacros)
 | Comando | Descripción |
 | :--- | :--- |
-| `make grafana-dev` | Abre túnel al Grafana de DEV. |
-| `make grafana-pro` | Abre túnel al Grafana de PRO. |
-| `make prometheus-dev` | Abre túnel al Prometheus de DEV. |
-| `make prometheus-pro` | Abre túnel al Prometheus de PRO. |
-
-
-### Utilidades
-| Comando | Descripción |
-| :--- | :--- |
-| `make logs-dev` | Muestra logs de los pods de la app en Desarrollo. |
-| `make switch-dev` | Cambia el contexto de tu terminal a Desarrollo. |
-| `make logs-pro` | Muestra logs de los pods de la app en Producción. |
-| `make switch-pro` | Cambia el contexto de tu terminal a Producción. |
+| `make test-pro` | Ejecuta tests de integración contra el entorno. |
+| `make stop-db-pro` | 🛑 Detiene la Base de Datos (Simula caída). |
+| `make start-db-pro` | ▶️ Recupera la Base de Datos. |
+| `make stop-minio-pro` | 🛑 Detiene MinIO (Comprueba fallo de assets). |
+| `make start-minio-pro` | ▶️ Recupera MinIO. |
+| `make trigger-alert-pro` | ⚠️ Provoca alerta de "Baja Disponibilidad" (1 réplica). |
+| `make resolve-alert-pro` | ✅ Resuelve la alerta (Vuelve a 4 réplicas). |
